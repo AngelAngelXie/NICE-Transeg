@@ -30,12 +30,6 @@ class NICE_Transeg_Dataset(Dataset):
             label = np.load(atlas_label)
             image = np.squeeze(image, axis=-1);
             label = np.squeeze(label, axis=-1);
-            print("!!!!!!!!!!!!!!!!!!!!")
-            print(image.shape)
-            print("!!!!!!!!!!!!!!!!!!!!")
-            print("!!!!!!!!!!!!!!!!!!!!")
-            print(label.shape)
-            print("!!!!!!!!!!!!!!!!!!!!")
             self.atlas.append(self.transform(image).float().unsqueeze(0).to(self.device))
             self.atlas_labels.append(self.transform(label).float().unsqueeze(0).to(self.device))
 
@@ -46,9 +40,9 @@ class NICE_Transeg_Dataset(Dataset):
         image = np.load(self.files[idx], allow_pickle=False)
         atlas_idx = random.randint(0, len(self.atlas)-1)
         image = np.squeeze(image, axis=-1);
-        print("!!!!!!!!!!!!!!!!!!!!")
+        print("***********")
         print(image.shape)
-        print("!!!!!!!!!!!!!!!!!!!!")
+        print("***********")
         return self.transform(image).float().unsqueeze(0).to(self.device), self.atlas[atlas_idx], self.atlas_labels[atlas_idx]
 
 
@@ -69,12 +63,6 @@ class NICE_Transeg_Dataset_Infer(Dataset):
         label = np.load(self.labels[idx], allow_pickle=False)
         image = np.squeeze(image, axis=-1);
         label = np.squeeze(label, axis=-1);
-        print("!!!!!!!!!!!!!!!!!!!!")
-        print(image.shape)
-        print("!!!!!!!!!!!!!!!!!!!!")
-        print("!!!!!!!!!!!!!!!!!!!!")
-        print(label.shape)
-        print("!!!!!!!!!!!!!!!!!!!!")
         return self.transform(image).float().unsqueeze(0).to(self.device), self.transform(label).float().unsqueeze(0).to(self.device)
     
 class NICE_Transeg_Dataset_IXI(Dataset):
