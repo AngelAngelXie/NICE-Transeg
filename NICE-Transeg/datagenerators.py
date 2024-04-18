@@ -37,6 +37,9 @@ class NICE_Transeg_Dataset(Dataset):
     def __getitem__(self, idx):
         image = np.load(self.files[idx], allow_pickle=False)
         atlas_idx = random.randint(0, len(self.atlas)-1)
+        print("!!!!!!!!!!!!!!!!!!!!")
+        print(image.shape)
+        print("!!!!!!!!!!!!!!!!!!!!")
         return self.transform(image).float().unsqueeze(0).to(self.device), self.atlas[atlas_idx], self.atlas_labels[atlas_idx]
 
 
