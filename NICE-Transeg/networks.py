@@ -218,7 +218,7 @@ class Trans_decoder(nn.Module):
         self.reghead_4 = DeformHead_block(channel_num*8, use_checkpoint)
         self.reghead_5 = AffineHead_block(channel_num*16)
         
-        self.ResizeTransformer = ResizeTransformer_block(resize_factor=2, mode='trilinear')
+        self.ResizeTransformer = ResizeTransformer_block(resize_factor=2, mode='bilinear')
         self.SpatialTransformer = SpatialTransformer_block(mode='bilinear')
 
     def forward(self, x_fix, x_mov):
