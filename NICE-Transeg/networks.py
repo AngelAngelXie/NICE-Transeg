@@ -644,7 +644,7 @@ class DeformHead_block(nn.Module):
     def __init__(self, 
                  in_channels: int, 
                  use_checkpoint: bool = False,
-                 out_channels: int = 3,):
+                 out_channels: int = 2,):
         super().__init__()
         self.use_checkpoint = use_checkpoint
         
