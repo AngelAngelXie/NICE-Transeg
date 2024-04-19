@@ -91,47 +91,40 @@ class Grad:
 
 class NJD:
     def __init__(self, device):
-        # Adjusting to use 2D convolutions
-        self.gradx = nn.Conv2d(in_channels=2, out_channels=2, kernel_size=(3, 1), padding='same', bias=False)
-        self.gradx.weight = nn.Parameter(torch.tensor([[-0.5, 0, 0.5], [-0.5, 0, 0.5]]).to(device).reshape(2, 2, 3, 1))
+        # Initialize gradient kernels for 2D
+        self.gradx = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(3, 1), padding='same', bias=False)
+        self.gradx.weight = nn.Parameter(torch.tensor([-0.5, 0, 0.5], dtype=torch.float32).reshape(1, 1, 3, 1).to(device))
         
-        self.grady = nn.Conv2d(in_channels=2, out_channels=2, kernel_size=(1, 3), padding='same', bias=False)
-        self.grady.weight = nn.Parameter(torch.tensor([[-0.5, 0, 0.5], [-0.5, 0, 0.5]]).to(device).reshape(2, 2, 1, 3))
+        self.grady = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1, 3), padding='same', bias=False)
+        self.grady.weight = nn.Parameter(torch.tensor([-0.5, 0, 0.5], dtype=torch.float32).reshape(1, 1, 1, 3).to(device))
         
+        # Identity matrix for 2D
         self.eye = torch.eye(2, 2).reshape(2, 2, 1, 1).to(device)
-    
+
     def batched_loss(self, batched_disp):
         N, _, H, W = batched_disp.shape
         loss = 0
-        for n in range(N): 
-            loss += self.loss(batched_disp[n,:,:,:].unsqueeze(0))
+        for n in range(N):
+            loss += self.loss(batched_disp[n].unsqueeze(0))
         return loss / N
-    
+
     def loss(self, disp):
-        N, _, H, W = disp.shape  # disp has shape [N, C, H, W], C should be 2
+        N, _, H, W = disp.shape  # batch_size, 2, H, W
+        disp = torch.reshape(disp.permute(0, 2, 3, 1), (N, 2, H, W))
 
-        # Compute gradients
-        gradx_disp = self.gradx(disp)
-        grady_disp = self.grady(disp)
+        gradx_disp = torch.stack([self.gradx(disp[:, i, :, :]) for i in range(2)], axis=1)
+        grady_disp = torch.stack([self.grady(disp[:, i, :, :]) for i in range(2)], axis=1)
 
-        # Concatenate the gradient outputs along the channel dimension if needed
-        grad_disp = torch.cat([gradx_disp, grady_disp], dim=1)
-
-        # Expand self.eye to match the batch size and spatial dimensions of grad_disp
-        eye_expanded = self.eye.expand(N, -1, H, W)
-
-        # Assume grad_disp contains gradients [dx, dy] along channels for each direction
-        jacobian = torch.zeros((N, 2, 2, H, W), device=disp.device)
-        jacobian[:, 0, 0, :, :] = gradx_disp[:, 0, :, :]  # dx/dx
-        jacobian[:, 0, 1, :, :] = grady_disp[:, 0, :, :]  # dy/dx
-        jacobian[:, 1, 0, :, :] = gradx_disp[:, 1, :, :]  # dx/dy
-        jacobian[:, 1, 1, :, :] = grady_disp[:, 1, :, :]  # dy/dy
-
-        # Calculate the determinant of the 2x2 Jacobian for each pixel
-        jacdet = jacobian[:, 0, 0, :, :] * jacobian[:, 1, 1, :, :] - jacobian[:, 0, 1, :, :] * jacobian[:, 1, 0, :, :]
-
-        # Normalized count of negative determinants
-        return torch.sum(jacdet < 0) / torch.prod(torch.tensor(jacdet.shape[2:4]))
+        grad_disp = torch.stack([gradx_disp, grady_disp], axis=0)
+        
+        jacobian = grad_disp + self.eye
+        jacobian = jacobian[:, :, :, :, 1:-1, 1:-1]  # Adjust slicing to avoid border issues
+        
+        # Compute determinant of the 2x2 Jacobian
+        jacdet = jacobian[0, 0, :, :, :] * jacobian[1, 1, :, :, :] - jacobian[0, 1, :, :, :] * jacobian[1, 0, :, :, :]
+        
+        return torch.sum(jacdet < 0) / torch.prod(torch.tensor(jacdet.shape))
+    
 class Regu_loss:
     def __init__(self, device='cuda'):
         self.NJD = NJD(device)
