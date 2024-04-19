@@ -227,50 +227,21 @@ class Trans_decoder(nn.Module):
         x_mov_1, x_mov_2, x_mov_3, x_mov_4, x_mov_5 = x_mov
         
         # Step 1
-        print("1")
-        print(x_fix_5.shape)
-        print("2")
-        print(x_mov_5.shape)
         x = torch.cat([x_fix_5, x_mov_5], dim=1)
-        print("3")
-        print(x.shape)
         x = self.backdim_5(x)
-        print("4")
-        print(x.shape)
         x_5 = self.trans_5(x)
-        print("5")
-        print(x_5.shape)
         flow_5, affine_para = self.reghead_5(x_5)
-        print("6")
-        print(flow_5.shape)
 
         # Step 2
         flow_5_up = self.ResizeTransformer(flow_5)
-        print("7")
-        print(flow_5_up.shape)
-        print("8")
-        print(x_mov_4.shape)
         x_mov_4 = self.SpatialTransformer(x_mov_4, flow_5_up)
-        print("9")
-        print(x_mov_4.shape)
         
         x = self.upsample_4(x_5)
-        print("10")
-        print(x.shape)
         x = torch.cat([x_fix_4, x, x_mov_4], dim=1)
-        print("11")
-        print(x.shape)
         x = self.backdim_4(x)
-        print("12")
-        print(x.shape)
         x_4 = self.trans_4(x)
-        print("13")
-        print(x_4.shape)
+        
         x = self.reghead_4(x_4)
-        print("14")
-        print(x.shape)
-        print("15")
-        print(flow_5_up.shape)
         flow_4 = x + flow_5_up
         
         # Step 3

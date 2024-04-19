@@ -103,7 +103,7 @@ class NJD:
     def batched_loss(self, batched_disp):
         N, _, H, W = batched_disp.shape
         loss = 0
-        for n in range(N): loss += self.loss(batched_disp[n,:,:,:,:].unsqueeze(0))
+        for n in range(N): loss += self.loss(batched_disp[n,:,:,:].unsqueeze(0))
         return loss/N
     def loss(self, disp):
         N, _, H, W = disp.shape # batch_size, 3, 160, 192 (for oasis)
