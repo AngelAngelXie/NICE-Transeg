@@ -118,7 +118,7 @@ class NJD:
         grad_disp = torch.stack([gradx_disp, grady_disp], axis=0)
         
         jacobian = grad_disp + self.eye
-        jacobian = jacobian[:, :, :, :, 1:-1, 1:-1]  # Adjust slicing to avoid border issues
+        jacobian = jacobian[:, :, :, 1:-1, 1:-1]  # Adjust slicing to avoid border issues
         
         # Compute determinant of the 2x2 Jacobian
         jacdet = jacobian[0, 0, :, :, :] * jacobian[1, 1, :, :, :] - jacobian[0, 1, :, :, :] * jacobian[1, 0, :, :, :]
