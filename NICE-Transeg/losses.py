@@ -92,9 +92,9 @@ class Grad:
 class NJD:
     def __init__(self, device):
         self.gradx = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(3, 1), padding='same', bias=False) 
-        self.gradx.weight = nn.Parameter(torch.tensor([-0.5, 0, 0.5]).to(device).reshape(1, 3, 1, 1))
+        self.gradx.weight = nn.Parameter(torch.tensor([-0.5, 0, 0.5]).to(device).reshape(1, 1, 3, 1))
         self.grady = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1, 3), padding='same', bias=False) 
-        self.grady.weight = nn.Parameter(torch.tensor([-0.5, 0, 0.5]).to(device).reshape(1, 1, 3, 1))
+        self.grady.weight = nn.Parameter(torch.tensor([-0.5, 0, 0.5]).to(device).reshape(1, 1, 1, 3))
         # self.gradz = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=(1, 1, 3), padding='same', bias=False) 
         # self.gradz.weight = nn.Parameter(torch.tensor([-0.5, 0, 0.5]).to(device).reshape(1, 1, 1, 1, 3))
         # self.eye = torch.eye(3, 3).reshape(3, 3, 1, 1, 1).to(device)
@@ -112,11 +112,11 @@ class NJD:
         gradx_disp = torch.stack([self.gradx(disp[:, i, :, :]) for i in range(2)], axis = 1)
         grady_disp = torch.stack([self.grady(disp[:, i, :, :]) for i in range(2)], axis = 1)
         # gradz_disp = torch.stack([self.gradz(disp[:, i, :, :, :]) for i in range(3)], axis = 1)
-
+        
         grad_disp = torch.concat([gradx_disp, grady_disp], dim=1)
 
         jacobian = grad_disp + self.eye
-        jacobian = jacobian[:, :, :, 2:-2, 2:-2]
+        jacobian = jacobian[:, :, 2:-2, 2:-2]
 
         # Calculate the determinant of the 2x2 Jacobian
         jacdet = jacobian[:, 0, 0, :, :] * jacobian[:, 1, 1, :, :] - jacobian[:, 0, 1, :, :] * jacobian[:, 1, 0, :, :]
